@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import time
+import urllib.request
+import os
 
 def get_category(url_website):
 	links = []
@@ -39,7 +40,13 @@ def get_product_from_category(url_category):
 				   u'image_url',
 				   u'product_description',]
 
-		file_name = category + '.csv'
+		try:
+			os.mkdir(category)
+		except:
+			print('file creation failed')
+
+		category_file = category
+		file_name = os.path.join(category_file, category + '.csv')
 		f = open(file_name, 'w')
 		ligneEntete = ";".join(entetes) + '\n'
 		f.write(ligneEntete)					   
@@ -48,15 +55,27 @@ def get_product_from_category(url_category):
 		for h3 in h3s:
 			a = h3.find('a')
 			link = a['href']
-			#links.append('http://books.toscrape.com/catalogue/category/books/christian_43/' + link)
 			get_infos_product(url_category + link, file_name)
+
+		next_page = soup.find('li',{'class':'next'})
+		
+		while next_page is not None:
+			a = next_page.find('a')
+			url_category_next_page = url_category + '/' + a['href']
+			response = requests.get(url_category_next_page)
+			if response.ok:
+				soup = BeautifulSoup(response.text,'lxml')
+				h3s = soup.findAll('h3')
+				for h3 in h3s:
+					a = h3.find('a')
+					link = a['href']
+					get_infos_product(url_category + link, file_name)
+				next_page = soup.find('li',{'class':'next'})
+
 			
 	
 
-
 def get_infos_product(url_product, file_name):
-	#with open('Christian.csv', 'w') as outf:
-		#outf.write('product_page_url,universal_product_code,title,price_including_tax,price_excluding_tax,number_available,product_description,category,review_rating,image_url \n')
 
 		response = requests.get(url_product)
 		if response.ok:
@@ -90,38 +109,28 @@ def get_infos_product(url_product, file_name):
 			star = p['class']
 
 			image_url = soup.find('div', {'class':'item active'}).find('img')
-
-			#print('product_page_url: ' + url_product + '\n')
-			#print('universal_product_code: ' + universal_product_code + '\n')
-			#print('title: ' + title.text + '\n')
-			#print('price_including_tax: ' + price_including_tax + '\n')
-			#print('price_excluding_tax: ' + price_excluding_tax + '\n')
-			#print('number_available: ' + number_available + '\n')
-			#print('product_description: ' + product_description.text + '\n')
-			#print('category: ' + category.text + '\n')
-			#print('review_rating: ' + star[1] + '\n')
-			#print('image_url: ' + 'http://books.toscrape.com/' + image_url['src'] + '\n')
+			image_url = image_url['src']
+			image_url = image_url.replace('../../','')
+			image_url = 'http://books.toscrape.com/' + image_url
 		   
 
 		f = open(file_name, 'a')
 		valeurs = [url_product,
-			           universal_product_code,
-			           title.text,
-			           price_including_tax,
-			           price_excluding_tax,
-			           number_available,
-			           category.text,
-			           star[1],
-			           'http://books.toscrape.com/' + image_url['src'],
-			           product_description.text,]
+			       universal_product_code,
+			       title.text,
+			       price_including_tax,
+			       price_excluding_tax,
+			       number_available,
+			       category.text,
+			       star[1],
+			       image_url,
+			       product_description.text]
 		
 		ligne = ";".join(valeurs) + '\n'
 		f.write(ligne)
 		f.close()
 
-
 		
-
 
 
 if __name__ == "__main__":
