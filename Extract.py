@@ -40,12 +40,16 @@ def get_product_from_category(url_category):
 				   u'image_url',
 				   u'product_description',]
 
+		category_file = category
+		images_file = category + '_images'
 		try:
 			os.mkdir(category)
+			os.mkdir(os.path.join(category_file, images_file))
 		except:
 			print('file creation failed')
 
 		category_file = category
+		#category_image = os.path.join(category_file, category + '_images')
 		file_name = os.path.join(category_file, category + '.csv')
 		f = open(file_name, 'w')
 		ligneEntete = ";".join(entetes) + '\n'
@@ -55,7 +59,7 @@ def get_product_from_category(url_category):
 		for h3 in h3s:
 			a = h3.find('a')
 			link = a['href']
-			get_infos_product(url_category + link, file_name)
+			get_infos_product(url_category + link, file_name, category_file,images_file)
 
 		next_page = soup.find('li',{'class':'next'})
 		
@@ -69,13 +73,13 @@ def get_product_from_category(url_category):
 				for h3 in h3s:
 					a = h3.find('a')
 					link = a['href']
-					get_infos_product(url_category + link, file_name)
+					get_infos_product(url_category + link, file_name, category_file,images_file)
 				next_page = soup.find('li',{'class':'next'})
 
 			
 	
 
-def get_infos_product(url_product, file_name):
+def get_infos_product(url_product, file_name, category_file, images_file):
 
 		response = requests.get(url_product)
 		if response.ok:
@@ -86,6 +90,7 @@ def get_infos_product(url_product, file_name):
 			links = []
 			trs = soup.findAll('tr')
 			title = soup.find('div', {'class':'col-sm-6 product_main'}).find('h1')
+			title = title.text
 			for tr in trs:
 				td = tr.find('td')
 				infos.append(td.text)
@@ -117,7 +122,7 @@ def get_infos_product(url_product, file_name):
 		f = open(file_name, 'a')
 		valeurs = [url_product,
 			       universal_product_code,
-			       title.text,
+			       title,
 			       price_including_tax,
 			       price_excluding_tax,
 			       number_available,
@@ -130,7 +135,18 @@ def get_infos_product(url_product, file_name):
 		f.write(ligne)
 		f.close()
 
-		
+		image_name = title.replace(' ','')
+		image_name = image_name.replace('.','')
+		image_name = image_name.replace(',','')
+		image_name = image_name.replace('/','')
+		image_name = image_name.replace('#','')
+
+		os.chdir(category_file)
+		os.chdir(images_file)
+		urllib.request.urlretrieve(image_url, image_name + '.jpg')
+		os.chdir('../../')
+	
+
 
 
 if __name__ == "__main__":
