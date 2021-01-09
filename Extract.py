@@ -9,14 +9,16 @@ def get_category(url_website):
 	response = requests.get(url_website)
 	if response.ok:
 		soup = BeautifulSoup(response.text,'lxml')
-		lis=soup.find('ul', {'class':'nav nav-list'}).findAll('li')
 
+		#Getting the link of each category
+		lis=soup.find('ul', {'class':'nav nav-list'}).findAll('li')
 		for li in lis:
 			a = li.find('a')
 			a = a['href']
 			a = a.replace('index.html','')
 			links.append(a)
 
+		#Getting the products from each category
 		for i in range(1, len(links)):
 			link = links[i]
 			get_product_from_category(url_website + link)
@@ -49,9 +51,9 @@ def get_product_from_category(url_category):
 			print('file creation failed')
 
 		category_file = category
-		#category_image = os.path.join(category_file, category + '_images')
+		
 		file_name = os.path.join(category_file, category + '.csv')
-		f = open(file_name, 'w')
+		f = open(file_name, 'w', encoding="utf-8")
 		ligneEntete = ";".join(entetes) + '\n'
 		f.write(ligneEntete)					   
 		f.close()	
@@ -119,7 +121,7 @@ def get_infos_product(url_product, file_name, category_file, images_file):
 			image_url = 'http://books.toscrape.com/' + image_url
 		   
 
-		f = open(file_name, 'a')
+		f = open(file_name, 'a', encoding="utf-8")
 		valeurs = [url_product,
 			       universal_product_code,
 			       title,
