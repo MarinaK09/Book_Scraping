@@ -97,8 +97,8 @@ def get_infos_product(url_product, file_name, category_file, images_file):
 				td = tr.find('td')
 				infos.append(td.text)
 			universal_product_code = infos[0]
-			price_excluding_tax = infos[2][1:]
-			price_including_tax = infos[3][1:]
+			price_excluding_tax = infos[2]
+			price_including_tax = infos[3]
 			number_available = infos[5]
 
 			descripts = soup.find('article', {'class':'product_page'}).findAll('p')
